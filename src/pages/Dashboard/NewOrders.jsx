@@ -92,7 +92,7 @@ const NewOrders = () => {
                                     <motion.div
                                         whileHover={{ scale: 1.01 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className="cursor-pointer inline-block"
+                                        className="cursor-pointer inline-block hover:bg-green-100 rounded-full"
                                     >
                                         <img src={RoundedTick} alt="Tick Icon" />
                                     </motion.div>
@@ -100,7 +100,7 @@ const NewOrders = () => {
                                     <motion.div
                                         whileHover={{ scale: 1.01 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className="cursor-pointer inline-block"
+                                        className="cursor-pointer inline-block hover:bg-red-100 rounded-full"
                                     >
                                         <img src={RoundedClose} />
                                     </motion.div>

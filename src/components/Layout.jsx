@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom'
 
 const Layout = () => {
     return (
-        <div className='relative'>
+        <div className='relative h-screen flex flex-col'>
             <div className="sticky top-0 z-50 bg-[#FBFFFF]" >
                 <NavBar className="sticky top-0 z-50 bg-[#FBFFFF]" />
             </div>

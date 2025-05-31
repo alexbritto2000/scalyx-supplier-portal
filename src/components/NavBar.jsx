@@ -97,7 +97,7 @@ const NavBar = () => {
                     <CustomLink href="/returns" title="Returns" notify="0" />
                     <CustomLink href="/invoices" title="Invoices" notify="0" />
                     <CustomLink href="/payments" title="Payments" notify="0" />
-                    <CustomLink href="/intenvory" title="Inventory" notify="0" />
+                    <CustomLink href="/inventory" title="Inventory" notify="0" />
                     <CustomLink href="/work-order" title="Work Order" notify="0" />
                 </nav>
 
@@ -131,13 +131,19 @@ const NavBar = () => {
                                         acmeinc@gmail.com
                                     </div>
 
-                                    <div className="text-[0.875rem] text-[#22223B] pb-[0.713rem] flex justify-center gap-[5px] cursor-pointer">
-                                        <img src={ProfileSettings} />
-                                        Profile Settings
-                                    </div>
+                                    <Link to="/profile-settings">
+                                        <div className="text-[0.875rem] text-[#22223B] pb-[0.713rem] flex justify-center gap-[5px] cursor-pointer">
+                                            <div className="w-4 flex justify-center">
+                                                <img src={ProfileSettings} alt="Profile Settings" />
+                                            </div>
+                                            Profile Settings
+                                        </div>
+                                    </Link>
 
                                     <div className="text-[0.875rem] text-[#9C0C0C] flex justify-center gap-[5px] cursor-pointer">
-                                        <img src={LogoutIcon} />
+                                        <div className="w-4 flex justify-center">
+                                            <img src={LogoutIcon} />
+                                        </div>
                                         Log out
                                     </div>
                                 </div>
