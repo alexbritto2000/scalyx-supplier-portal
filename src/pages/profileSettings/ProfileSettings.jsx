@@ -179,6 +179,7 @@ const ProfileSettings = () => {
                                     <div className='w-44'>
                                         <Select
                                             variant="bordered"
+                                            disableSelectorIconRotation
                                             placeholder="Select a country"
                                             classNames={{
                                                 trigger: inputWrapperStyle,
@@ -296,6 +297,7 @@ const ProfileSettings = () => {
                                 selectorIcon={
                                     <img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />
                                 }
+                                disableSelectorIconRotation
                             >
                                 <SelectItem>
                                     Bank Transfer
@@ -317,6 +319,7 @@ const ProfileSettings = () => {
                                 selectorIcon={
                                     <img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />
                                 }
+                                disableSelectorIconRotation
                             >
                                 <SelectItem>
                                     FedEx
@@ -349,6 +352,7 @@ const ProfileSettings = () => {
                                 selectorIcon={
                                     <img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />
                                 }
+                                disableSelectorIconRotation
                             >
                                 <SelectItem>
                                     30 Days
@@ -370,6 +374,7 @@ const ProfileSettings = () => {
                                 selectorIcon={
                                     <img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />
                                 }
+                                disableSelectorIconRotation
                             >
                                 <SelectItem>
                                     Contact via email for returns
@@ -402,6 +407,7 @@ const ProfileSettings = () => {
                                 selectorIcon={
                                     <img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />
                                 }
+                                disableSelectorIconRotation
                                 selectedKeys={selectedLanguage ? [selectedLanguage.code] : []}
                                 onChange={handleChangeLanguage}
                                 renderValue={() =>

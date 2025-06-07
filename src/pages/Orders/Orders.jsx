@@ -8,7 +8,7 @@ import RoundedTick from '../../assets/rounded-tick.svg';
 import RoundedClose from '../../assets/rounded-close.svg';
 import TickVerifyProduct from '../../assets/tick-verify-product.svg';
 import { useDisclosure } from "@heroui/react";
-import OrderModal from './OrderModal';
+import OrderModal from './Modal/OrderModal';
 
 const Orders = () => {
     const [selectedTab, setSelectedTab] = useState('all');
@@ -116,6 +116,7 @@ const Orders = () => {
                             <Select
                                 variant="bordered"
                                 selectedKeys={["none"]}
+                                disableSelectorIconRotation
                                 classNames={{
                                     trigger: `${inputWrapperStyle} flex-nowrap items-center gap-2 text-[0.82rem]`,
                                 }}

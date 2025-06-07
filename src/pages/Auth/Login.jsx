@@ -9,17 +9,16 @@ import googleIcon from '../../assets/google-rounded-icon.svg';
 import EyeHide from '../../assets/eye-hide.svg';
 import EyeOpen from '../../assets/eye-open.svg';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const LoginSchema = Yup.object().shape({
         email: Yup.string().email('Invalid email').required('Email is required'),
-        password: Yup.string().min(6, 'Too short').required('Password is required'),
-        confirmPassword: Yup.string()
-            .oneOf([Yup.ref('password'), null], 'Passwords must match')
-            .required('Confirm password is required'),
+        password: Yup.string().min(6, 'Too short').required('Password is required')
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const navigate = useNavigate();
 
     return (
         <div className='flex flex-col items-center'>
@@ -32,10 +31,11 @@ const Login = () => {
             </div>
 
             <Formik
-                initialValues={{ email: '', password: '', confirmPassword: '' }}
+                initialValues={{ email: '', password: '' }}
                 validationSchema={LoginSchema}
                 onSubmit={(values) => {
                     console.log(values);
+                    navigate('/')
                 }}
             >
                 {({ errors, touched }) => (
@@ -97,44 +97,6 @@ const Login = () => {
                                     </div>
                                 )}
                             </div>
-
-                            {/* <div>
-                                <div className='text-[1.125rem] text-[#22223B] mb-[0.45rem] font-medium'>
-                                    Repeat Password
-                                </div>
-
-                                <Field name="confirmPassword" className="!rounded-[2.5rem]">
-                                    {({ field }) => (
-                                        <div className="relative password-field">
-                                            <Input
-                                                {...field}
-                                                radius="full"
-                                                type={showConfirmPassword ? "text" : "password"}
-                                                placeholder="Confirm Password"
-                                                className="w-full mb-2"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute inset-y-0 right-3 flex items-center text-gray-500"
-                                                tabIndex={-1}
-                                            >
-                                                <img
-                                                    src={showConfirmPassword ? EyeOpen : EyeHide}
-                                                    alt="Toggle Confirm Password Visibility"
-                                                    className="w-5 h-5"
-                                                />
-                                            </button>
-                                        </div>
-                                    )}
-                                </Field>
-
-                                {errors.confirmPassword && touched.confirmPassword && (
-                                    <div className="text-red-500 text-[0.75rem] font-semibold mt-[-0.75rem] pt-[0.25rem]">
-                                        {errors.confirmPassword}
-                                    </div>
-                                )}
-                            </div> */}
 
                             <Button type="submit" className="w-full mt-6 bg-[#22223B] text-[#FBFFFF]">
                                 Login

@@ -109,6 +109,7 @@ const Returns = () => {
                                         className="w-4 h-4 text-gray-500"
                                     />
                                 }
+                                disableSelectorIconRotation
                             >
                                 <SelectItem key="none">None</SelectItem>
                                 <SelectItem key="date">Date Requested</SelectItem>

@@ -4,12 +4,14 @@ import DropDown from '../../assets/dropdown.svg';
 import '../pages.scss'
 import NewOrders from './NewOrders';
 import PendingVerification from './PendingVerification';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
+    const navigate = useNavigate();
 
     return (
         <div className='px-8 py-8 bg-[#F5F9F9]'>
-            <div className='flex justify-center items-center gap-2 border border-[#F0F0F0] rounded-xl px-4 py-[0.5rem] w-fit bg-white'>
+            <div className='flex justify-center items-center gap-2 border border-[#F0F0F0] rounded-xl px-4 py-[0.5rem] w-fit bg-white cursor-pointer' onClick={() => navigate('/choose-store')}>
                 <img src={CardIcon} />
 
                 <div>

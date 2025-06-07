@@ -64,6 +64,7 @@ const NavBar = () => {
     const [isPopOverOpen, setIsPopOverOpen] = useState(false);
 
     const toggleMenu = () => setIsOpen(!isOpen);
+    const navigate = useNavigate();
 
     return (
         <header className="w-full px-8 py-4 font-medium flex items-center justify-between relative z-10 md:px-6 sm:px-4 shadow-[0px_1px_14px_0px_#273C5B24]">
@@ -84,10 +85,7 @@ const NavBar = () => {
             {/* Desktop Navigation */}
             <div className="w-full flex justify-between items-center lg:hidden">
                 <nav className="flex items-center">
-                    {/* <CustomLink href="/" title="Home" className="mr-4" />
-                    <CustomLink href="/about" title="About" className="mx-4" />
-                    <CustomLink href="/projects" title="Projects" className="mx-4" /> */}
-                    <img src={scalyxLogo} className="w-[7.125rem] cursor-pointer" />
+                    <img src={scalyxLogo} className="w-[7.125rem] cursor-pointer" onClick={() => navigate('/')} />
                 </nav>
 
                 <nav className="flex items-center">
@@ -140,7 +138,7 @@ const NavBar = () => {
                                         </div>
                                     </Link>
 
-                                    <div className="text-[0.875rem] text-[#9C0C0C] flex justify-center gap-[5px] cursor-pointer">
+                                    <div className="text-[0.875rem] text-[#9C0C0C] flex justify-center gap-[5px] cursor-pointer" onClick={() => navigate('/login')}>
                                         <div className="w-4 flex justify-center">
                                             <img src={LogoutIcon} />
                                         </div>

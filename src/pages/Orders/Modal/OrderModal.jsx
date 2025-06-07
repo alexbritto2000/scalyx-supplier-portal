@@ -8,7 +8,7 @@ import {
     Button,
 } from "@heroui/react";
 import { IoMdClose } from "react-icons/io";
-import productImg from '../../assets/img.png';
+import productImg from '../../../assets/img.png';
 import { motion } from "framer-motion";
 
 const products = [
