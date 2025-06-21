@@ -4,7 +4,6 @@ import Login from '../pages/Auth/Login'
 import AuthLayout from '../components/AuthLayout'
 import ChooseStore from '../pages/ChooseStore/ChooseStore'
 import Layout from '../components/Layout'
-import Dashboard from '../pages/Dashboard/dashboard'
 import Signup from '../pages/Auth/Signup'
 import ProfileLayout from '../components/ProfileLayout'
 import ProfileSettings from '../pages/profileSettings/ProfileSettings'
@@ -17,6 +16,7 @@ import Invoices from '../pages/Invoices/Invoices'
 import Payments from '../pages/Payments/Payments'
 import WorkOrders from '../pages/WorkOrder/WorkOrder'
 import Inventory from '../pages/Inventory/Inventory'
+import Dashboard from '../pages/Dashboard/Dashboard'
 
 const AppRouter = () => {
     return (
