@@ -7,8 +7,10 @@ import TickVerifyProduct from '../../assets/tick-verify-product.svg';
 import { useDashboard } from './DashboardContext';
 import { putRequest } from "../../api/api";
 import { order } from "../../api/apiEndpoints";
+import { useNavigate } from 'react-router-dom';
 
 const PendingVerification = () => {
+    const navigate = useNavigate();
     const {
         pendingVerification,
         totalPendingVerification,
@@ -51,7 +53,7 @@ const PendingVerification = () => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.95 }}
                     className="bg-[#22223B] rounded-3xl px-3 py-1 text-white text-[12px] hover:opacity-90"
-                    onClick={() => refreshPendingVerification(1, pendingVerificationLimit)}
+                    onClick={() => navigate('/orders', { state: { defaultTab: 'pending-verification' } })}
                 >
                     <div className="flex items-center gap-2">
                         See All Pending Verifications

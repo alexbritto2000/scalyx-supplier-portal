@@ -4,8 +4,10 @@ import RoundedTick from '../../assets/rounded-tick.svg';
 import AddInvoiceIcon from '../../assets/add-invoice.svg';
 import DropDown from '../../assets/dropdown.svg';
 import { useDashboard } from './DashboardContext';
+import { useNavigate } from "react-router-dom";
 
 const PendingInvoicing = () => {
+    const navigate = useNavigate();
     const { 
         pendingInvoicing, 
         totalPendingInvoicing,
@@ -33,7 +35,7 @@ const PendingInvoicing = () => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.95 }}
                     className="bg-[#22223B] rounded-3xl px-3 py-1 text-white text-[12px] hover:opacity-90"
-                    onClick={() => refreshPendingInvoicing(1, pendingInvoicingLimit)}
+                    onClick={() => navigate('/orders', { state: { defaultTab: 'pending-invoice' } })}
                 >
                     <div className="flex items-center gap-2">
                         See All Pending Invoicing

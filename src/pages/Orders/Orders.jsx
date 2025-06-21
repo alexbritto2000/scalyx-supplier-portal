@@ -1,68 +1,169 @@
 // pages/Orders.jsx
 import { Input, Select, SelectItem } from '@heroui/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import dropDownIconUrl from '../../assets/drop-down-icon.svg';
+import PendingShipmentsIcon from '../../assets/pending-shipments.svg';
 import searchIcon from '../../assets/search-icon.svg';
 import { motion } from "framer-motion";
 import RoundedTick from '../../assets/rounded-tick.svg';
 import RoundedClose from '../../assets/rounded-close.svg';
 import TickVerifyProduct from '../../assets/tick-verify-product.svg';
+import InvoiceIcon from '../../assets/invoice-icon.svg';
+import AddInvoiceIcon from '../../assets/add-invoice.svg';
 import { useDisclosure } from "@heroui/react";
 import OrderModal from './Modal/OrderModal';
+import { getRequest, putRequest } from '../../api/api';
+import { order as orderEndpoints } from '../../api/apiEndpoints';
 
 const Orders = () => {
-    const [selectedTab, setSelectedTab] = useState('all');
+    const location = useLocation();
+    const [selectedTab, setSelectedTab] = useState(location.state?.defaultTab || 'all');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const inputWrapperStyle = "border border-[#F0F0F0] focus-within:border-blue-500 rounded-md";
 
-    // Sample order data
-    const orders = [
-        {
-            date: '11.04.2025',
-            orderNumber: '123–008',
-            quantity: 5,
-            total: '$6,998.00',
-            dueDate: '21.04.2025',
-            status: 'New Order'
-        },
-        {
-            date: '10.04.2025',
-            orderNumber: '123–005',
-            quantity: 9,
-            total: '$4,012.00',
-            dueDate: '20.04.2025',
-            status: 'Verified'
-        },
-        {
-            date: '09.04.2025',
-            orderNumber: '123–002',
-            quantity: 3,
-            total: '$2,450.00',
-            dueDate: '19.04.2025',
-            status: 'Pending Verification'
-        }
-    ];
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [totalOrders, setTotalOrders] = useState(0);
 
-    const filteredOrders = orders.filter(order => {
-        if (selectedTab === 'all') return true;
-        if (selectedTab === 'new-orders') return order.status === 'New Order';
-        if (selectedTab === 'pending-verification') return order.status === 'Pending Verification';
-        if (selectedTab === 'pending-shipments') return order.status === 'Pending Shipment';
-        if (selectedTab === 'pending-invoice') return order.status === 'Pending Invoicing';
-        return true;
-    });
+    const getStatusForTab = (tab) => {
+        switch (tab) {
+            case 'new-orders': return 'submitted';
+            case 'pending-verification': return 'pending_verification';
+            case 'pending-shipments': return 'pending_shipment';
+            case 'pending-invoice': return 'pending_invoicing';
+            case 'shipped': return 'shipped';
+            case 'returned': return 'returned';
+            default: return undefined;
+        }
+    };
+
+    const fetchOrdersForTab = useCallback(async (tab, newPage = 1, newLimit = 10) => {
+        setLoading(true);
+        setError(null);
+        const status = getStatusForTab(tab);
+        const params = {
+            page: newPage,
+            limit: newLimit,
+            ...(status && { status }),
+        };
+        try {
+            const res = await getRequest(orderEndpoints.purchaseOrder, params);
+            const data = res.data || res.results || res;
+            setOrders(Array.isArray(data) ? data : (data.data || []));
+            setTotalOrders(res.total || 0);
+            setPage(newPage);
+            setLimit(newLimit);
+        } catch (err) {
+            setError("Failed to load orders");
+            console.error(`Error fetching ${tab} orders:`, err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchOrdersForTab(selectedTab, 1, limit);
+    }, [selectedTab, fetchOrdersForTab]);
+
+    const handlePageChange = (newPage) => {
+        if (newPage > 0 && newPage <= Math.ceil(totalOrders / limit)) {
+            fetchOrdersForTab(selectedTab, newPage, limit);
+        }
+    };
+
+    const handleLimitChange = (newLimit) => {
+        fetchOrdersForTab(selectedTab, 1, newLimit);
+    };
+
+    const updateOrderStatus = async (orderId, status) => {
+        try {
+            await putRequest(`${orderEndpoints.purchaseOrder}/${orderId}`, { status });
+            fetchOrdersForTab(selectedTab, page, limit); // Refresh current tab
+        } catch (err) {
+            console.error("Error updating order status:", err);
+        }
+    };
 
     const handleRowClick = (order) => {
         setSelectedOrder(order);
         onOpen();
     };
 
-    const handleActionClick = (e, order) => {
-        e.stopPropagation(); // Prevent row click from triggering
-        // Handle specific action here
-        console.log('Action clicked for order:', order.orderNumber);
+    const handleActionClick = (e, orderId, status) => {
+        e.stopPropagation();
+        updateOrderStatus(orderId, status);
     };
+
+    const renderOrderActions = (order) => {
+        switch (order.status) {
+            case 'submitted':
+                return (
+                    <>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="cursor-pointer hover:bg-green-100 rounded-full p-1" onClick={(e) => handleActionClick(e, order.po_id, 'pending_verification')}>
+                            <img src={RoundedTick} alt="Approve" />
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="cursor-pointer hover:bg-red-100 rounded-full p-1" onClick={(e) => handleActionClick(e, order.po_id, 'cancelled')}>
+                            <img src={RoundedClose} alt="Reject" />
+                        </motion.div>
+                    </>
+                );
+            case 'pending_verification':
+                return (
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="rounded-full px-3 py-1 text-xs hover:opacity-90 border border-[#22223B]" onClick={(e) => handleActionClick(e, order.po_id, 'pending_shipment')}>
+                        <div className="flex items-center gap-2">
+                            <img src={TickVerifyProduct} alt="Verify" className="w-4 h-4" />
+                            Verify Products
+                        </div>
+                    </motion.button>
+                );
+            case 'pending_invoicing':
+                return (
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="rounded-full px-3 py-1 text-xs hover:opacity-90 border border-[#22223B]" onClick={(e) => handleActionClick(e, order.po_id, 'shipped')}>
+                        <div className="flex items-center gap-2">
+                            <img src={AddInvoiceIcon} alt="Add Invoice" className="w-4 h-4" />
+                            Add Invoice
+                        </div>
+                    </motion.button>
+                );
+            case 'pending_shipment':
+                return(
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="rounded-3xl px-3 py-1 text-[12px] hover:opacity-90 border border-[#22223B]"
+                        onClick={() => updateOrderStatus(order.po_id, 'shipped')}
+                    >
+                        <div className="flex items-center gap-2">
+                            <motion.img
+                                src={PendingShipmentsIcon}
+                                alt="Arrow"
+                                initial={{ x: 0 }}
+                                whileHover={{ x: 5 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                            />
+                            Add Tracking Number
+                        </div>
+                    </motion.button>
+                )
+            default:
+                return null;
+        }
+    };
+
+    const TABS = [
+        { key: 'all', label: 'All' },
+        { key: 'new-orders', label: 'New Orders' },
+        { key: 'pending-verification', label: 'Pending Verification' },
+        { key: 'pending-shipments', label: 'Pending Shipments' },
+        { key: 'pending-invoice', label: 'Pending Invoicing' },
+        { key: 'shipped', label: 'Shipped' },
+        { key: 'returned', label: 'Pending Returns' },
+    ];
 
     return (
         <div className="p-8 bg-[#F5F9F9] flex flex-1">
@@ -70,44 +171,15 @@ const Orders = () => {
                 <div className='py-4 px-6'>
                     {/* Tabs */}
                     <div className="flex gap-6 border-b text-sm font-medium text-gray-600">
-                        <div
-                            className={`py-[10px] px-5 text-[0.82rem] text-[#6E6E70] cursor-pointer ${selectedTab === 'all' ? 'border-b-2 border-black text-black' : ''}`}
-                            onClick={() => setSelectedTab('all')}
-                        >
-                            All
-                        </div>
-
-                        <div
-                            className={`py-[10px] px-5 text-[0.82rem] text-[#6E6E70] cursor-pointer relative ${selectedTab === 'new-orders' ? 'border-b-2 border-black text-black' : ''}`}
-                            onClick={() => setSelectedTab('new-orders')}
-                        >
-                            New Orders
-                            <div className="absolute bg-[#FF5D5D] w-[6px] h-[6px] rounded-full right-3 top-[10px]"></div>
-                        </div>
-
-                        <div
-                            className={`py-[10px] px-5 text-[0.82rem] text-[#6E6E70] cursor-pointer relative ${selectedTab === 'pending-verification' ? 'border-b-2 border-black text-black' : ''}`}
-                            onClick={() => setSelectedTab('pending-verification')}
-                        >
-                            Pending Verification
-                            <div className="absolute bg-[#FF5D5D] w-[6px] h-[6px] rounded-full right-3 top-[10px]"></div>
-                        </div>
-
-                        <div
-                            className={`py-[10px] px-5 text-[0.82rem] text-[#6E6E70] cursor-pointer relative ${selectedTab === 'pending-shipments' ? 'border-b-2 border-black text-black' : ''}`}
-                            onClick={() => setSelectedTab('pending-shipments')}
-                        >
-                            Pending Shipments
-                            <div className="absolute bg-[#FF5D5D] w-[6px] h-[6px] rounded-full right-3 top-[10px]"></div>
-                        </div>
-
-                        <div
-                            className={`py-[10px] px-5 text-[0.82rem] text-[#6E6E70] cursor-pointer relative ${selectedTab === 'pending-invoice' ? 'border-b-2 border-black text-black' : ''}`}
-                            onClick={() => setSelectedTab('pending-invoice')}
-                        >
-                            Pending Invoicing
-                            <div className="absolute bg-[#FF5D5D] w-[6px] h-[6px] rounded-full right-3 top-[10px]"></div>
-                        </div>
+                        {TABS.map(tab => (
+                            <div
+                                key={tab.key}
+                                className={`py-[10px] px-5 text-[0.82rem] text-[#6E6E70] cursor-pointer ${selectedTab === tab.key ? 'border-b-2 border-black text-black' : ''}`}
+                                onClick={() => setSelectedTab(tab.key)}
+                            >
+                                {tab.label}
+                            </div>
+                        ))}
                     </div>
 
                     {/* Search and Sort */}
@@ -117,18 +189,9 @@ const Orders = () => {
                                 variant="bordered"
                                 selectedKeys={["none"]}
                                 disableSelectorIconRotation
-                                classNames={{
-                                    trigger: `${inputWrapperStyle} flex-nowrap items-center gap-2 text-[0.82rem]`,
-                                }}
-                                startContent={<span className="whitespace-nowrap text-[#22223B] text-[0.82rem] font-medium">
-                                    Sort by:</span>}
-                                selectorIcon={
-                                    <img
-                                        src={dropDownIconUrl}
-                                        alt="dropdown"
-                                        className="w-4 h-4 text-gray-500"
-                                    />
-                                }
+                                classNames={{ trigger: `${inputWrapperStyle} flex-nowrap items-center gap-2 text-[0.82rem]` }}
+                                startContent={<span className="whitespace-nowrap text-[#22223B] text-[0.82rem] font-medium">Sort by:</span>}
+                                selectorIcon={<img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />}
                             >
                                 <SelectItem key="none">None</SelectItem>
                                 <SelectItem key="date">Date</SelectItem>
@@ -136,16 +199,7 @@ const Orders = () => {
                                 <SelectItem key="dueDate">Due Date</SelectItem>
                             </Select>
                         </div>
-
-                        <Input
-                            placeholder="Search order"
-                            type="text"
-                            startContent={<img src={searchIcon} alt="Search" />}
-                            classNames={{
-                                inputWrapper: `!rounded-full ${inputWrapperStyle}`,
-                            }}
-                            variant="bordered"
-                        />
+                        <Input placeholder="Search order" type="text" startContent={<img src={searchIcon} alt="Search" />} classNames={{ inputWrapper: `!rounded-full ${inputWrapperStyle}` }} variant="bordered" />
                     </div>
 
                     {/* Table */}
@@ -153,82 +207,63 @@ const Orders = () => {
                         <table className="min-w-full text-sm text-left border-collapse">
                             <thead className="text-[#22223B] font-medium">
                                 <tr className="border-b border-[#F0F0F0]">
-                                    <th className="py-2 px-4">Date</th>
-                                    <th className="py-2 px-4">Order Number</th>
-                                    <th className="py-2 px-4">Product Qty</th>
-                                    <th className="py-2 px-4">Total</th>
-                                    <th className="py-2 px-4">Due Date</th>
-                                    <th className="py-2 px-4">Status</th>
-                                    <th className="py-2 px-4 text-center">Actions</th>
+                                    {["Date", "Order Number", "Product Qty", "Total", "Due Date", "Status", "Actions"].map(label => (
+                                        <th key={label} className="py-2 px-4">{label}</th>
+                                    ))}
                                 </tr>
                             </thead>
-
                             <tbody className="text-gray-700">
-                                <tr>
-                                    <td colSpan="7" className="h-4"></td>
-                                </tr>
-
-                                {filteredOrders.map((order, index) => (
-                                    <tr
-                                        key={index}
-                                        className="even:bg-[#F5F9F9] hover:bg-gray-50 cursor-pointer"
-                                        onClick={() => handleRowClick(order)}
-                                    >
-                                        <td className="py-3 px-4">{order.date}</td>
-                                        <td className="py-3 px-4">{order.orderNumber}</td>
-                                        <td className="py-3 px-4">{order.quantity}</td>
-                                        <td className="py-3 px-4">{order.total}</td>
-                                        <td className="py-3 px-4">{order.dueDate}</td>
-                                        <td className="py-3 px-4">{order.status}</td>
-                                        <td className="py-3 px-4 flex justify-center gap-2">
-                                            {order.status === 'New Order' ? (
-                                                <>
-                                                    <motion.div
-                                                        whileHover={{ scale: 1.01 }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                        className="cursor-pointer inline-block hover:bg-green-100 rounded-full"
-                                                        onClick={(e) => handleActionClick(e, order)}
-                                                    >
-                                                        <img src={RoundedTick} alt="Approve" />
-                                                    </motion.div>
-
-                                                    <motion.div
-                                                        whileHover={{ scale: 1.01 }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                        className="cursor-pointer inline-block hover:bg-red-100 rounded-full"
-                                                        onClick={(e) => handleActionClick(e, order)}
-                                                    >
-                                                        <img src={RoundedClose} alt="Reject" />
-                                                    </motion.div>
-                                                </>
-                                            ) : (
-                                                <motion.button
-                                                    whileHover={{ scale: 1.01 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    className="rounded-3xl px-3 py-1 text-[12px] hover:opacity-90 border border-[#22223B]"
-                                                    onClick={(e) => handleActionClick(e, order)}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <motion.img
-                                                            src={TickVerifyProduct}
-                                                            alt="Verify"
-                                                            initial={{ x: 0 }}
-                                                            whileHover={{ x: 5 }}
-                                                            transition={{ type: "spring", stiffness: 300 }}
-                                                        />
-                                                        Verify Products
-                                                    </div>
-                                                </motion.button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                <tr className="h-4"></tr>
+                                {loading ? (
+                                    <tr><td colSpan="7" className="text-center py-8">Loading...</td></tr>
+                                ) : error ? (
+                                    <tr><td colSpan="7" className="text-center py-8 text-red-500">{error}</td></tr>
+                                ) : orders.length === 0 ? (
+                                    <tr><td colSpan="7" className="text-center py-12 text-gray-500">No orders found.</td></tr>
+                                ) : (
+                                    orders.map((order) => (
+                                        <tr key={order.po_id} className="even:bg-[#F5F9F9] hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(order)}>
+                                            <td className="py-3 px-4">{new Date(order.created_at).toLocaleDateString()}</td>
+                                            <td className="py-3 px-4">{order.po_number}</td>
+                                            <td className="py-3 px-4">{order.cart_items?.reduce((sum, item) => sum + (item.ordered_quantity || 0), 0) || 0}</td>
+                                            <td className="py-3 px-4">{`$${parseFloat(order.total_amount || 0).toLocaleString()}`}</td>
+                                            <td className="py-3 px-4">{new Date(order.expected_delivery_date).toLocaleDateString()}</td>
+                                            <td className="py-3 px-4">{order.status}</td>
+                                            <td className="py-3 px-4 flex justify-center items-center gap-2">{renderOrderActions(order)}</td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
+                     {/* Pagination */}
+                    {totalOrders > limit && (
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-[#F0F0F0]">
+                            <div className="text-sm text-gray-600">
+                                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalOrders)} of {totalOrders} results
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <select value={limit} onChange={(e) => handleLimitChange(parseInt(e.target.value))} className="border border-gray-300 rounded px-2 py-1 text-sm">
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                </select>
+                                <span className="text-sm text-gray-600">per page</span>
+                                <div className="flex gap-1">
+                                    <button onClick={() => handlePageChange(page - 1)} disabled={page <= 1} className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                                        Previous
+                                    </button>
+                                    <span className="px-3 py-1 text-sm border border-gray-300 rounded bg-gray-50">{page}</span>
+                                    <button onClick={() => handlePageChange(page + 1)} disabled={page * limit >= totalOrders} className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
             <OrderModal isOpen={isOpen} onClose={onClose} order={selectedOrder} />
         </div>
     );

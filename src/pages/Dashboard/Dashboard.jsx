@@ -1,5 +1,5 @@
 // Dashboard.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import CardIcon from '../../assets/fareview-jewelry.svg';
 import DropDown from '../../assets/dropdown.svg';
 import '../pages.scss';
@@ -14,7 +14,19 @@ import PendingInvoicing from './PendingInvoicing';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const { totalNewOrders, totalPendingVerification, totalPendingShipments, totalShipments, totalPendingReturns, totalPendingInvoicing } = useDashboard();
+    const { 
+        totalNewOrders, 
+        totalPendingVerification, 
+        totalPendingShipments, 
+        totalShipments, 
+        totalPendingReturns, 
+        totalPendingInvoicing,
+        initializeDashboard 
+    } = useDashboard();
+
+    useEffect(() => {
+        initializeDashboard();
+    }, [initializeDashboard]);
 
     return (
         <div className='px-8 py-8 bg-[#F5F9F9]'>

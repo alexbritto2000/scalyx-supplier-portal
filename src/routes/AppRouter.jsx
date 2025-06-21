@@ -17,6 +17,7 @@ import Payments from '../pages/Payments/Payments'
 import WorkOrders from '../pages/WorkOrder/WorkOrder'
 import Inventory from '../pages/Inventory/Inventory'
 import Dashboard from '../pages/Dashboard/Dashboard'
+import DashboardLayout from '../components/DashboardLayout'
 
 const AppRouter = () => {
     return (
@@ -29,8 +30,10 @@ const AppRouter = () => {
             <Route path="/choose-store" element={<ChooseStore />} />
 
             <Route element={<Layout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/" element={<Dashboard />} />
+                <Route element={<DashboardLayout />}>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/" element={<Dashboard />} />
+                </Route>
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/shipping" element={<Shipping />} />
                 <Route path="/returns" element={<Returns />} />

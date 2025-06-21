@@ -7,8 +7,10 @@ import DropDown from '../../assets/dropdown.svg';
 import { useDashboard } from './DashboardContext';
 import { putRequest } from "../../api/api";
 import { order } from "../../api/apiEndpoints";
+import { useNavigate } from "react-router-dom";
 
 const NewOrders = () => {
+    const navigate = useNavigate();
     const {
         newOrders,
         totalNewOrders,
@@ -52,7 +54,7 @@ const NewOrders = () => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.95 }}
                     className="bg-[#22223B] rounded-3xl px-3 py-1 text-white text-[12px] hover:opacity-90"
-                    onClick={() => refreshNewOrders(1, newOrdersLimit)}
+                    onClick={() => navigate('/orders', { state: { defaultTab: 'new-orders' } })}
                 >
                     <div className="flex items-center gap-2">
                         See All New Orders

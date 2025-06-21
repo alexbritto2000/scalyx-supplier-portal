@@ -4,8 +4,10 @@ import RoundedTick from '../../assets/rounded-tick.svg';
 import RoundedClose from '../../assets/rounded-close.svg';
 import DropDown from '../../assets/dropdown.svg';
 import { useDashboard } from './DashboardContext';
+import { useNavigate } from 'react-router-dom';
 
 const PendingReturns = () => {
+    const navigate = useNavigate();
     const {
         pendingReturns,
         totalPendingReturns,
@@ -33,7 +35,7 @@ const PendingReturns = () => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.95 }}
                     className="bg-[#22223B] rounded-3xl px-3 py-1 text-white text-[12px] hover:opacity-90"
-                    onClick={() => refreshPendingReturns(1, pendingReturnsLimit)}
+                    onClick={() => navigate('/orders', { state: { defaultTab: 'returned' } })}
                 >
                     <div className="flex items-center gap-2">
                         See All Pending Returns

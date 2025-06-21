@@ -1,5 +1,5 @@
 // contexts/DashboardContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { getRequest } from '../../api/api';
 import { order } from '../../api/apiEndpoints';
 
@@ -7,6 +7,7 @@ import { order } from '../../api/apiEndpoints';
 const DashboardContext = createContext();
 
 export const DashboardProvider = ({ children }) => {
+    const isInitialized = useRef(false);
     // New Orders state
     const [newOrders, setNewOrders] = useState([]);
     const [totalNewOrders, setTotalNewOrders] = useState(0);
@@ -187,7 +188,11 @@ export const DashboardProvider = ({ children }) => {
         }
     };
 
-    useEffect(() => {
+    const initializeDashboard = useCallback(() => {
+        if (isInitialized.current) {
+            return;
+        }
+        isInitialized.current = true;
         fetchNewOrders();
         fetchPendingVerification();
         fetchPendingShipments();
@@ -251,6 +256,8 @@ export const DashboardProvider = ({ children }) => {
             pendingInvoicingPage,
             pendingInvoicingLimit,
             refreshPendingInvoicing: fetchPendingInvoicing,
+            
+            initializeDashboard,
             
             // Legacy support
             loading: newOrdersLoading,

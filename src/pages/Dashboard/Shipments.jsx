@@ -4,10 +4,12 @@ import RoundedTick from '../../assets/rounded-tick.svg';
 import RoundedClose from '../../assets/rounded-close.svg';
 import DropDown from '../../assets/dropdown.svg';
 import { useDashboard } from './DashboardContext';
+import { useNavigate } from "react-router-dom";
 import { putRequest } from "../../api/api";
 import { order } from "../../api/apiEndpoints";
 
 const Shipments = () => {
+    const navigate = useNavigate();
     const { 
         shipments, 
         totalShipments,
@@ -47,7 +49,7 @@ const Shipments = () => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.95 }}
                     className="bg-[#22223B] rounded-3xl px-3 py-1 text-white text-[12px] hover:opacity-90"
-                    onClick={() => refreshShipments(1, shipmentsLimit)}
+                    onClick={() => navigate('/orders', { state: { defaultTab: 'shipped' } })}
                 >
                     <div className="flex items-center gap-2">
                         See All Shipments
