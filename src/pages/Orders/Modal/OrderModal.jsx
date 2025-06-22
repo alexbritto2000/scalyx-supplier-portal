@@ -10,6 +10,7 @@ import {
 import { IoMdClose } from "react-icons/io";
 import productImg from '../../../assets/img.png';
 import { motion } from "framer-motion";
+import toast from 'react-hot-toast';
 
 const products = [
     {
@@ -55,17 +56,30 @@ const products = [
 ];
 
 const OrderModal = ({ isOpen, onClose, order }) => {
-    // Calculate total quantity and price
-    const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
-    const totalPrice = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+    if (!order) return null;
+
+    // Calculate total quantity and price from the order data
+    const totalQuantity = order.cart_items?.reduce((sum, item) => sum + (item.ordered_quantity || 0), 0) || 0;
+    const totalPrice = order.total_amount || 0;
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "-";
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
 
     const handleActionClick = (e, action) => {
         e.preventDefault();
-        // Handle different actions (accept, decline, close)
         if (action === 'accept') {
-            console.log('Order accepted');
+            console.log('Order accepted', order.po_id);
+            toast.success(`Order #${order.po_number || 'N/A'} has been accepted successfully!`);
         } else if (action === 'decline') {
-            console.log('Order declined');
+            console.log('Order declined', order.po_id);
+            toast.error(`Order #${order.po_number || 'N/A'} has been declined.`);
         }
         onClose();
     };
@@ -86,7 +100,7 @@ const OrderModal = ({ isOpen, onClose, order }) => {
                     <div>
                         <div className="flex justify-between items-center px-6 py-4 bg-[#FBFFFF] shadow-sm">
                             <div className="text-[1.375rem] text-[#22223B] font-medium">
-                                order #123-008
+                                Order #{order.po_number || 'N/A'}
                             </div>
 
                             <div className="cursor-pointer" onClick={onClose}>
@@ -99,7 +113,7 @@ const OrderModal = ({ isOpen, onClose, order }) => {
                                 <div className="text-[1rem] text-[#6E6E70]">
                                     Date:&nbsp;
                                     <span className="font-medium !text-[#22223B]">
-                                        11.04.2025
+                                        {formatDate(order.order_date)}
                                     </span>
                                 </div>
 
@@ -113,14 +127,14 @@ const OrderModal = ({ isOpen, onClose, order }) => {
                                 <div className="text-[1rem] text-[#6E6E70]">
                                     Total:&nbsp;
                                     <span className="font-medium !text-[#22223B]">
-                                        ${totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                        ${Number(totalPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </span>
                                 </div>
 
                                 <div className="text-[1rem] text-[#6E6E70]">
                                     Status:&nbsp;
-                                    <span className="font-medium !text-[#22223B]">
-                                        New Order
+                                    <span className="font-medium !text-[#22223B] capitalize">
+                                        {order.status || 'N/A'}
                                     </span>
                                 </div>
                             </div>
@@ -133,53 +147,65 @@ const OrderModal = ({ isOpen, onClose, order }) => {
 
                             {/* Product cards */}
                             <div className="flex flex-col gap-2 h-[48vh] overflow-y-auto">
-                                {products.map((product) => (
-                                    <div key={product.id} className="relative shadow-[inset_0_0_4px_0_rgba(51,74,95,0.12)] rounded-lg bg-[#FBFFFF] p-3 flex justify-between items-center gap-3">
-                                        <div className="flex justify-between items-center gap-3">
-                                            <div>
-                                                <img src={productImg} className="w-[6.125rem]" alt={product.name} />
+                                {order.cart_items?.map((item) => {
+                                    const product = item.product;
+                                    const mainImage = product?.product_images?.[0]?.media_url;
+
+                                    return (
+                                        <div key={item.po_detail_id} className="relative shadow-[inset_0_0_4px_0_rgba(51,74,95,0.12)] rounded-lg bg-[#FBFFFF] p-3 flex justify-between items-center gap-3">
+                                            <div className="flex justify-between items-center gap-3">
+                                                <div>
+                                                    {mainImage && (
+                                                        <img
+                                                            src={mainImage}
+                                                            className="w-[6.125rem] h-[6.125rem] object-contain"
+                                                            alt={product?.product_name}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                <div className="text-[0.825rem]">
+                                                    <div>
+                                                        {product?.brand?.brand_name || 'No Brand'}
+                                                    </div>
+
+                                                    <div className="mt-1 font-medium">
+                                                        {product?.product_name || 'No Name'}
+                                                    </div>
+
+                                                    <div className="max-w-[40vw]">
+                                                        {product?.description || 'No Description'}
+                                                    </div>
+
+                                                    <div>
+                                                        <span className="font-medium">SKU:&nbsp;</span>
+                                                        {item.stock_number || 'N/A'}
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <div className="text-[0.825rem]">
-                                                <div>
-                                                    {product.brand}
+                                            <div className="flex justify-between items-center gap-3">
+                                                <div className="flex flex-col items-center gap-2 mx-8">
+                                                    <div className="text-[#6E6E70]">
+                                                        Qty
+                                                    </div>
+
+                                                    <div className="text-[#22223B]">
+                                                        {item.ordered_quantity || 0}
+                                                    </div>
                                                 </div>
 
-                                                <div className="mt-1 font-medium">
-                                                    {product.name}
+                                                <div className="text-[#22223B] text-[1.375rem]">
+                                                    ${Number(item.unit_cost || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                 </div>
 
-                                                <div>
-                                                    {product.description}
-                                                </div>
-
-                                                <div>
-                                                    <span className="font-medium">SKU:&nbsp;</span> {product.sku}
+                                                <div className="absolute text-[0.75rem] text-[#22223B] px-[0.725rem] py-[0.2rem] rounded-xl bg-[#F2F6F6] top-[0.75rem] right-[1.25rem]">
+                                                    {product?.category?.category_name || 'No Category'}
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="flex justify-between items-center gap-3">
-                                            <div className="flex flex-col items-center gap-2 mx-8">
-                                                <div className="text-[#6E6E70]">
-                                                    Qty
-                                                </div>
-
-                                                <div className="text-[#22223B]">
-                                                    {product.quantity}
-                                                </div>
-                                            </div>
-
-                                            <div className="text-[#22223B] text-[1.375rem]">
-                                                ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                            </div>
-
-                                            <div className="absolute text-[0.75rem] text-[#22223B] px-[0.725rem] py-[0.2rem] rounded-xl bg-[#F2F6F6] top-[0.75rem] right-[1.25rem]">
-                                                {product.category}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Buttons */}

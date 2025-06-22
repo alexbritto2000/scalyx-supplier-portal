@@ -8,6 +8,7 @@ import { useDashboard } from './DashboardContext';
 import { putRequest } from "../../api/api";
 import { order } from "../../api/apiEndpoints";
 import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 
 const NewOrders = () => {
     const navigate = useNavigate();
@@ -36,12 +37,23 @@ const NewOrders = () => {
                 status: status
             });
             console.log(res);
+            
+            // Show appropriate toast message based on status change
+            const statusMessages = {
+                'pending_verification': 'Order moved to pending verification',
+                'cancelled': 'Order has been cancelled'
+            };
+            
+            const message = statusMessages[status] || `Order status updated to ${status}`;
+            toast.success(message);
+            
             refreshNewOrders(1, 5);
             if (status == 'pending_verification') {
                 refreshPendingVerification(1, 5);
             }
         } catch (err) {
             console.error("Error fetching new orders:", err);
+            toast.error('Failed to update order status');
         }
     }
 

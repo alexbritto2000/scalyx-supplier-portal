@@ -1,10 +1,14 @@
 import { motion } from "framer-motion";
 import WhiteRightArrow from '../../assets/white-right-arrow.svg';
 import RoundedTick from '../../assets/rounded-tick.svg';
-import AddInvoiceIcon from '../../assets/add-invoice.svg';
+import RoundedClose from '../../assets/rounded-close.svg';
 import DropDown from '../../assets/dropdown.svg';
+import AddInvoiceIcon from '../../assets/add-invoice.svg';
 import { useDashboard } from './DashboardContext';
+import { putRequest } from "../../api/api";
+import { order } from "../../api/apiEndpoints";
 import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 
 const PendingInvoicing = () => {
     const navigate = useNavigate();
@@ -25,6 +29,27 @@ const PendingInvoicing = () => {
     const handleLimitChange = (newLimit) => {
         refreshPendingInvoicing(1, newLimit);
     };
+
+    const updateOrderStatus = async (orderId, status) => {
+        try {
+            const res = await putRequest(order.purchaseOrder + '/' + orderId, {
+                status: status
+            });
+            
+            // Show appropriate toast message based on status change
+            const statusMessages = {
+                'shipped': 'Order has been shipped'
+            };
+            
+            const message = statusMessages[status] || `Order status updated to ${status}`;
+            toast.success(message);
+            
+            refreshPendingInvoicing(1, 5);
+        } catch (err) {
+            console.error("Error fetching new orders:", err);
+            toast.error('Failed to update order status');
+        }
+    }
 
     return (
         <div>

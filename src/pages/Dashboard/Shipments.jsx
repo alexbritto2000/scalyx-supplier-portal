@@ -7,6 +7,7 @@ import { useDashboard } from './DashboardContext';
 import { useNavigate } from "react-router-dom";
 import { putRequest } from "../../api/api";
 import { order } from "../../api/apiEndpoints";
+import toast from 'react-hot-toast';
 
 const Shipments = () => {
     const navigate = useNavigate();
@@ -34,9 +35,19 @@ const Shipments = () => {
                 status: status
             });
             console.log(res);
+            
+            // Show appropriate toast message based on status change
+            const statusMessages = {
+                'returned': 'Order has been returned'
+            };
+            
+            const message = statusMessages[status] || `Order status updated to ${status}`;
+            toast.success(message);
+            
             refreshNewOrders(1, 5);
         } catch (err) {
             console.error("Error fetching new orders:", err);
+            toast.error('Failed to update order status');
         }
     }
 

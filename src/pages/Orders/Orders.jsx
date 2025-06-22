@@ -15,6 +15,8 @@ import { useDisclosure } from "@heroui/react";
 import OrderModal from './Modal/OrderModal';
 import { getRequest, putRequest } from '../../api/api';
 import { order as orderEndpoints } from '../../api/apiEndpoints';
+import { useDebounce } from 'use-debounce';
+import toast from 'react-hot-toast';
 
 const Orders = () => {
     const location = useLocation();
@@ -30,6 +32,11 @@ const Orders = () => {
     const [limit, setLimit] = useState(10);
     const [totalOrders, setTotalOrders] = useState(0);
 
+    // Filters State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 1000);
+    const [sortBy, setSortBy] = useState('none');
+
     const getStatusForTab = (tab) => {
         switch (tab) {
             case 'new-orders': return 'submitted';
@@ -42,7 +49,7 @@ const Orders = () => {
         }
     };
 
-    const fetchOrdersForTab = useCallback(async (tab, newPage = 1, newLimit = 10) => {
+    const fetchOrdersForTab = useCallback(async (tab, newPage = 1, newLimit = 10, search = '', sort = 'none') => {
         setLoading(true);
         setError(null);
         const status = getStatusForTab(tab);
@@ -50,6 +57,8 @@ const Orders = () => {
             page: newPage,
             limit: newLimit,
             ...(status && { status }),
+            ...(search && { keyword: search }),
+            ...(sort !== 'none' && { sort_by: sort }),
         };
         try {
             const res = await getRequest(orderEndpoints.purchaseOrder, params);
@@ -67,25 +76,39 @@ const Orders = () => {
     }, []);
 
     useEffect(() => {
-        fetchOrdersForTab(selectedTab, 1, limit);
-    }, [selectedTab, fetchOrdersForTab]);
+        fetchOrdersForTab(selectedTab, 1, limit, debouncedSearchTerm, sortBy);
+    }, [selectedTab, limit, debouncedSearchTerm, sortBy, fetchOrdersForTab]);
 
     const handlePageChange = (newPage) => {
         if (newPage > 0 && newPage <= Math.ceil(totalOrders / limit)) {
-            fetchOrdersForTab(selectedTab, newPage, limit);
+            fetchOrdersForTab(selectedTab, newPage, limit, debouncedSearchTerm, sortBy);
         }
     };
 
     const handleLimitChange = (newLimit) => {
-        fetchOrdersForTab(selectedTab, 1, newLimit);
+        fetchOrdersForTab(selectedTab, 1, newLimit, debouncedSearchTerm, sortBy);
     };
 
     const updateOrderStatus = async (orderId, status) => {
         try {
             await putRequest(`${orderEndpoints.purchaseOrder}/${orderId}`, { status });
-            fetchOrdersForTab(selectedTab, page, limit); // Refresh current tab
+            
+            // Show appropriate toast message based on status change
+            const statusMessages = {
+                'pending_verification': 'Order moved to pending verification',
+                'cancelled': 'Order has been cancelled',
+                'pending_shipment': 'Order moved to pending shipment',
+                'shipped': 'Order has been shipped',
+                'returned': 'Order has been returned'
+            };
+            
+            const message = statusMessages[status] || `Order status updated to ${status}`;
+            toast.success(message);
+            
+            fetchOrdersForTab(selectedTab, page, limit, debouncedSearchTerm, sortBy); // Refresh current tab
         } catch (err) {
             console.error("Error updating order status:", err);
+            toast.error('Failed to update order status');
         }
     };
 
@@ -184,22 +207,33 @@ const Orders = () => {
 
                     {/* Search and Sort */}
                     <div className="flex justify-between items-center my-4 gap-3">
-                        <div className='w-[13.75rem]'>
-                            <Select
-                                variant="bordered"
-                                selectedKeys={["none"]}
-                                disableSelectorIconRotation
-                                classNames={{ trigger: `${inputWrapperStyle} flex-nowrap items-center gap-2 text-[0.82rem]` }}
-                                startContent={<span className="whitespace-nowrap text-[#22223B] text-[0.82rem] font-medium">Sort by:</span>}
-                                selectorIcon={<img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />}
-                            >
-                                <SelectItem key="none">None</SelectItem>
-                                <SelectItem key="date">Date</SelectItem>
-                                <SelectItem key="total">Total</SelectItem>
-                                <SelectItem key="dueDate">Due Date</SelectItem>
-                            </Select>
+                        <div className="flex gap-3 items-center">
+                            <div className='w-[13.75rem]'>
+                                <Select
+                                    variant="bordered"
+                                    selectedKeys={[sortBy]}
+                                    onSelectionChange={(keys) => setSortBy(Array.from(keys)[0])}
+                                    disableSelectorIconRotation
+                                    classNames={{ trigger: `${inputWrapperStyle} flex-nowrap items-center gap-2 text-[0.82rem]` }}
+                                    startContent={<span className="whitespace-nowrap text-[#22223B] text-[0.82rem] font-medium">Sort by:</span>}
+                                    selectorIcon={<img src={dropDownIconUrl} alt="dropdown" className="w-4 h-4 text-gray-500" />}
+                                >
+                                    <SelectItem key="none">None</SelectItem>
+                                    <SelectItem key="date">Date</SelectItem>
+                                    <SelectItem key="total">Total</SelectItem>
+                                    <SelectItem key="dueDate">Due Date</SelectItem>
+                                </Select>
+                            </div>
                         </div>
-                        <Input placeholder="Search order" type="text" startContent={<img src={searchIcon} alt="Search" />} classNames={{ inputWrapper: `!rounded-full ${inputWrapperStyle}` }} variant="bordered" />
+                        <Input
+                            placeholder="Search order"
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            startContent={<img src={searchIcon} alt="Search" />}
+                            classNames={{ inputWrapper: `!rounded-full ${inputWrapperStyle}` }}
+                            variant="bordered"
+                        />
                     </div>
 
                     {/* Table */}

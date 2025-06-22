@@ -9,6 +9,7 @@ import { useDashboard } from './DashboardContext';
 import { order } from "../../api/apiEndpoints";
 import { putRequest } from "../../api/api";
 import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 
 const PendingShipments = () => {
     const navigate = useNavigate();
@@ -37,10 +38,20 @@ const PendingShipments = () => {
                 status: status
             });
             console.log(res);
+            
+            // Show appropriate toast message based on status change
+            const statusMessages = {
+                'shipped': 'Order has been shipped'
+            };
+            
+            const message = statusMessages[status] || `Order status updated to ${status}`;
+            toast.success(message);
+            
             refreshPendingShipments(1, 5);
             refreshShipments(1, 5);
         } catch (err) {
             console.error("Error fetching new orders:", err);
+            toast.error('Failed to update order status');
         }
     }
 
